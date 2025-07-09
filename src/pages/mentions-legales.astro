@@ -3,15 +3,16 @@ import Layout from "@layouts/BaseLayout.astro";
 import Section from "@atoms/Section.astro";
 import Wrapper2 from "@atoms/Wrapper2.astro";
 import Text from "@atoms/Text.astro";
+import Icon from "node_modules/astro-icon/components/Icon.astro";
 import List from "@atoms/List.astro";
 import { Image } from "astro:assets";
 import Details from "@atoms/Details.astro";
 
 // --- ON RÉCUPÈRE LES DONNÉES GLOBALES DEPUIS LE MIDDLEWARE ---
-const { org } = Astro.locals;
+const { org, site } = Astro.locals;
 
 // --- ON PEUT MAINTENANT FAIRE NOS CALCULS ICI ---
-const fullAddress = [org?.streetAddress, org?.postalCode, org?.addressLocality, org?.addressCountry]
+const fullAddress = [org?.streetaddress, org?.postalCode, org?.addressLocality, org?.addressCountry]
   .filter(Boolean)
   .join(', ');
 const defaultAddress = "Adresse complète de l'entreprise";
@@ -26,15 +27,15 @@ const siteUrl = org?.url ?? Astro.site?.href ?? "URL du site";
         <Section tag="div" class="cs-button-group">
           <Section tag="div" class="cs-flex">
             <a href="#mentions-legales" class="cs-option cs-active" data-filter="one">
-              <Image class="cs-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Graphics/plus.svg" alt="plus" width="12" height="12" loading="lazy" decoding="async" />
+              <Icon name="mdi:gavel" size={42}/>
               <Text tag="span">Mentions légales</Text>
             </a>
             <a href="#politique-confidentialite" class="cs-option" data-filter="two">
-              <Image class="cs-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Graphics/plus.svg" alt="plus" width="12" height="12" loading="lazy" decoding="async" />
+                <Icon name="mdi:shield-lock" size={42}/>
               <Text tag="span">Politique de Confidentialité</Text>
             </a>
             <a href="#cgv" class="cs-option" data-filter="three">
-              <Image class="cs-icon" src="https://csimg.nyc3.cdn.digitaloceanspaces.com/Images/Graphics/plus.svg" alt="plus" width="12" height="12" loading="lazy" decoding="async" />
+                <Icon name="mdi:file-document-check" size={42}/>
               <Text tag="span">Conditions Générales de Vente</Text>
             </a>
           </Section>
@@ -56,7 +57,7 @@ const siteUrl = org?.url ?? Astro.site?.href ?? "URL du site";
             <li class="cs-faq-item">
               <Details class="cs-details" summary="Identité du Site" backgroundColor="#f7f7f7" padding="1rem 1.5rem" border={true} borderColor="#e0e0e0" borderWidth="1px" summaryFontSize="1.25rem" summaryFontWeight="700">
                 <Text tag="p" class="cs-item-p">
-                  Dénomination sociale : <strong>{org?.legalname ?? "Nom légal de l'entreprise"}</strong><br />
+                  Dénomination sociale : <strong>{org?.legalname ?? site?.name ??"Nom légal de l'entreprise"}</strong><br />
                   Forme juridique : <strong>{org?.forme_juridique ?? "Forme juridique"}</strong><br />
                   Capital social : <strong>{org?.capital_social ?? "Capital social"}</strong><br />
                   Numéro SIRET : <strong>{org?.taxID ?? "Numéro SIRET"}</strong><br />

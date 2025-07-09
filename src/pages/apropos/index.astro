@@ -1,0 +1,160 @@
+---
+// src/pages/a-propos.astro
+// VERSION "DÉMO ULTIME" : Exécution fidèle du wireframe validé.
+
+// 1. IMPORTS
+import Layout from "@layouts/BaseLayout.astro";
+import Section from "@atoms/Section.astro";
+import Wrapper from "@atoms/Wrapper2.astro";
+import Text from "@atoms/Text.astro";
+import Button from "@atoms/Button.astro";
+import List from "@atoms/List.astro";
+import Details from "@atoms/Details.astro";
+import { Image } from "astro:assets";
+import { getCollection } from 'astro:content';
+import Slider from '@molecules/Slider.astro';
+import CounterUp from '@molecules/CounterUp.astro';
+import Timeline from '@organisms/Timeline.astro';
+import ValueCard from '@cards/ValueCard.astro';
+import QueryLoop from "@components/organisms/QueryLoop.astro";
+
+// 2. PRÉPARATION DES DONNÉES (avec fallbacks pour une démo toujours complète)
+const { org: orgFromDb, site: siteFromDb } = Astro.locals;
+const usersFromDb = await getCollection('users');
+
+const fallbackSite = {
+    slogan: "Redéfinir le Possible", advanced_description: "Nous transformons des idées complexes en réalités digitales élégantes et performantes. Notre mission : vous donner les outils pour innover sans limites.", elements_differenciation: "Notre framework propriétaire garantit une performance et une sécurité inégalées.", concurrence_positionnement: "Là où d'autres offrent des outils, nous offrons une stratégie intégrée.", objectif_site: "devenir le standard de l'industrie pour le développement agile", objectifs_court_terme: "Lancer notre nouvelle suite d'outils d'IA et atteindre 10,000 utilisateurs actifs.", objectifs_long_terme: "Créer un écosystème de développeurs open-source autour de notre technologie."
+};
+const fallbackOrg = {
+    name: "Nexus Innovations", legalName: "Nexus Innovations SAS", numberofemployees: 75, foundingdate: "2020-10-23T10:00:00", awards: ["Best B2B Solution 2023", "Tech Innovator of the Year", "Top Workplace Award"], foundinglocation: "Lyon, France", founder: ["Elara Vance", "Kaelen Moore"], department: ["Direction", "Produit", "Technique"], taxID: "123 456 789", vatID: "FR00123456789"
+};
+const fallbackUsers = [
+  { data: { nom: 'Elara Vance', job: 'CEO & Visionnaire', avatar: 'https://i.pravatar.cc/400?u=elara', department: 'Direction' }},
+  { data: { nom: 'Kaelen Moore', job: 'CTO & Architecte en Chef', avatar: 'https://i.pravatar.cc/400?u=kaelen', department: 'Technique' }},
+  { data: { nom: 'Anya Sharma', job: 'Lead Product Designer', avatar: 'https://i.pravatar.cc/400?u=anya', department: 'Produit' }},
+  { data: { nom: 'Leo Martinez', job: 'Head of Engineering', avatar: 'https://i.pravatar.cc/400?u=leo', department: 'Technique' }},
+  { data: { nom: 'Sofia Rossi', job: 'Directrice Marketing', avatar: 'https://i.pravatar.cc/400?u=sofia', department: 'Produit' }}
+];
+
+const site = siteFromDb ?? fallbackSite;
+const org = orgFromDb ?? fallbackOrg;
+const allUsers = (usersFromDb && usersFromDb.length > 0) ? usersFromDb : fallbackUsers;
+const founders = allUsers.filter(user => org.founder.includes(user.data.nom));
+
+const timelineEvents = [
+    { year: new Date(org.foundingdate).getFullYear().toString(), title: "La Naissance d'une Idée", description: `À ${org.foundinglocation}, ${org.founder.join(' et ')} ont fondé ${org.name} avec une mission : ${site.objectif_site}.`, icon: 'mdi:lightbulb-on-outline' },
+    { year: (new Date(org.foundingdate).getFullYear() + 1).toString(), title: "Lancement du Produit Beta", description: "Notre premier produit est lancé, validant notre vision.", icon: 'mdi:rocket-launch-outline' },
+    { year: "Aujourd'hui", title: "Une Référence de l'Industrie", description: `Avec ${org.awards?.length} récompenses majeures, nous continuons d'innover.`, icon: 'mdi:trophy-award' }
+];
+---
+
+<Layout title={`Notre Histoire - ${org.name}`} description={site.advanced_description}>
+
+  <!-- SECTION 1 : HÉROS CINÉMATOGRAPHIQUE -->
+  <Section id="hero-about" tag="header" classes="relative text-white flex items-center justify-center min-h-[80vh] overflow-hidden">
+    <video autoplay loop muted playsinline class="absolute z-0 w-auto min-w-full min-h-full max-w-none"><source src="https://assets.mixkit.co/videos/preview/mixkit-futuristic-wireframe-head-in-a-digital-network-40291-large.mp4" type="video/mp4"></video>
+    <div class="absolute inset-0 bg-primary opacity-80 z-10"></div>
+    <div class="relative z-20 text-center p-4">
+      <Text tag="p" preset="eyebrow" classes="text-accent-light">Notre Mission</Text>
+      <Text tag="h1" preset="page-title" textTransform="uppercase" classes="text-shadow-lg">{site.slogan}</Text>
+      <Text tag="p" preset="lead" maxWidth="max-w-3xl" margin="mx-auto" classes="text-shadow-md">{site.advanced_description}</Text>
+      <Wrapper marginTop="2rem">
+        <Button href="#history" text="Découvrir notre histoire" preset="accent" size="large" shadow />
+      </Wrapper>
+    </div>
+  </Section>
+
+  <!-- SECTION 2 : STATISTIQUES CLÉS -->
+  <Section id="stats" preset="secondary" tag="section">
+    <Wrapper cols={3} display="grid" gap="2rem">
+      <CounterUp endValue={org.numberofemployees} label="Experts à votre service" preset="primary" />
+      <CounterUp endValue={new Date().getFullYear() - new Date(org.foundingdate).getFullYear()} label="Années d'expérience" suffix=" ans" preset="accent" />
+      <CounterUp endValue={org.awards?.length ?? 0} label="Prix et reconnaissances" preset="primary" />
+    </Wrapper>
+  </Section>
+
+  <!-- SECTION 3 : L'HISTOIRE EN TIMELINE -->
+  <Section id="history" preset="default" tag="section">
+    <Text tag="h2" textAlign="center" marginBottom="3rem">Notre Odyssée</Text>
+    <Timeline events={timelineEvents} preset="accent" />
+  </Section>
+
+  <!-- SECTION 4 : NOS VALEURS FONDAMENTALES -->
+  <Section id="values" preset="secondary" tag="section">
+    <Text tag="h2" textAlign="center">Les Principes qui nous guident</Text>
+    <Text tag="p" preset="lead" textAlign="center" marginBottom="3rem">Plus que des mots, des actions.</Text>
+    <Wrapper cols={3} display="grid" gap="2rem">
+      <ValueCard icon="mdi:lightbulb-on-outline" title="Audace Créative" description="Nous défions le statu quo et explorons des territoires inconnus pour trouver des solutions révolutionnaires." />
+      <ValueCard icon="mdi:handshake-outline" title="Partenariat Radical" description="Votre succès est la seule mesure de notre propre succès. Nous sommes une extension de votre équipe." />
+      <ValueCard icon="mdi:diamond-stone" title="Qualité Intransigeante" description="Du pixel au code, chaque détail est poli avec une obsession pour l'excellence et la robustesse." />
+    </Wrapper>
+  </Section>
+  
+  <!-- SECTION 5 : LES FONDATEURS (Mise en avant avec Slider) -->
+  <Section id="founders" preset="default" tag="section">
+    <Text tag="h2" textAlign="center">Les Visionnaires</Text>
+    <Text tag="p" textAlign="center" marginBottom="2rem">Ceux par qui tout a commencé.</Text>
+    <Slider gap="1.5rem" itemMinWidth="320px">
+      {founders.map(user => (
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
+          <img src={user.data.avatar} alt={`Portrait de ${user.data.nom}`} class="w-full h-64 object-cover" />
+          <div class="p-5 flex-grow flex flex-col">
+            <h4 class="font-bold text-xl text-primary">{user.data.nom}</h4>
+            <p class="text-accent font-semibold mb-2">{user.data.job}</p>
+          </div>
+        </div>
+      ))}
+    </Slider>
+  </Section>
+  
+  <!-- SECTION 6 : L'ÉQUIPE COMPLÈTE (Grille avec QueryLoop) -->
+  <Section id="team" preset="secondary" tag="section">
+    <Text tag="h2" textAlign="center">Nos Pôles d'Expertise</Text>
+    <Text tag="p" textAlign="center" marginBottom="3rem">Les talents qui composent notre force.</Text>
+    {org.department?.map(dept => (
+      <div class="department-block mt-8">
+        <Text tag="h3" textAlign="center" preset="default" classes="inline-block px-4 py-1 rounded-md mb-4 bg-white shadow-sm">{dept}</Text>
+        <QueryLoop cardType="users" entries={allUsers} columns={3} filters={{ department: dept }} />
+      </div>
+    ))}
+  </Section>
+
+  <!-- SECTION 7 : NOTRE VISION & TRANSPARENCE -->
+  <Section id="vision-and-faq" preset="default" tag="section">
+    <Wrapper cols={2} display="grid" gap="4rem" alignItems="start">
+      <Wrapper>
+        <Text tag="h2" iconLeft="mdi:target-account">Notre ADN</Text>
+        <Text tag="p" preset="lead" marginBottom="1rem">Ce qui nous rend uniques.</Text>
+        <List
+            items={[
+                { icon: 'mdi:star-four-points-outline', text: `<strong>Stratégie Intégrée :</strong> ${site.concurrence_positionnement}` },
+                { icon: 'mdi:shield-check-outline', text: `<strong>Performance & Sécurité :</strong> ${site.elements_differenciation}` }
+            ]}
+        />
+      </Wrapper>
+      <Wrapper>
+        <Text tag="h2" iconLeft="mdi:help-box-outline">En Toute Transparence</Text>
+        <div class="mt-4 space-y-2">
+            <Details summary="Quelle est votre vision pour le futur ?" preset="default" border>
+                <List items={[{text: `<strong>Court terme :</strong> ${site.objectifs_court_terme}`}, {text: `<strong>Long terme :</strong> ${site.objectifs_long_terme}`}]} showMarkers={false} icon="mdi:chevron-right" />
+            </Details>
+            <Details summary="Informations légales" preset="default" border>
+                <Text tag="p" padding="p-4">Raison Sociale: {org.legalName}<br>N° TVA: {org.vatID}</Text>
+            </Details>
+        </div>
+      </Wrapper>
+    </Wrapper>
+  </Section>
+  
+  <!-- SECTION 8 : APPEL À L'ACTION FINAL -->
+  <Section id="cta-final" preset="primary" tag="section">
+    <Wrapper cols={1} textAlign="center">
+      <Text tag="h2">Prêt à construire l'avenir ?</Text>
+      <Text tag="p" preset="lead" maxWidth="max-w-2xl" margin="mx-auto">Notre équipe est prête à transformer votre vision en une réalité digitale percutante.</Text>
+      <Wrapper marginTop="2rem">
+        <Button href="/contact" text="Démarrer la conversation" preset="accent" size="large" icon={{ name: 'mdi:arrow-right', side: 'right' }} />
+      </Wrapper>
+    </Wrapper>
+  </Section>
+
+</Layout>

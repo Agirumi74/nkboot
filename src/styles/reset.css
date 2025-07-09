@@ -39,7 +39,7 @@ textarea {overflow: auto;}
 summary {display: list-item;}
 template {display: none;}
 [hidden] {display: none;}
-svg {display: inline-block;width: 1em;height: 1em;fill: currentColor;}
+svg {display: inline-block;fill: currentColor;}
 svg:first-child {margin-right: 0.5em;}
 svg:last-child {margin-left: 0.5em;}
 *::-webkit-scrollbar {width: 0;}

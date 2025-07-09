@@ -52,11 +52,11 @@ const config = {
       </div>
     )}
 
-    {config.showAddress && org.streetAddress && org.postalCode && org.addressLocality && org.addressCountry && (
+    {config.showAddress && org.streetaddress && org.postalCode && org.addressLocality && org.addressCountry && (
       <div>
         <Text tag="h4" fontWeight="bold">Adresse</Text>
         <Text tag="p">
-          {org.streetAddress}, {org.postalCode} {org.addressLocality}, {org.addressCountry}
+          {org.streetaddress}, {org.postalCode} {org.addressLocality}, {org.addressCountry}
         </Text>
       </div>
     )}

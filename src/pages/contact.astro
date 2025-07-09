@@ -1,0 +1,175 @@
+---
+// IMPORTS
+import Layout from "@layouts/BaseLayout.astro";
+import Section from "@atoms/Section.astro";
+import Wrapper from "@atoms/Wrapper2.astro";
+import Text from "@atoms/Text.astro";
+import Link from "@atoms/Link.astro";
+import Form from "@organisms/Form.astro";
+import Input from "@atoms/Input.astro";
+import Button from "@atoms/Button.astro";
+import Map from "@atoms/Map.astro";
+
+// 1. RÉCUPÉRATION DES DONNÉES
+const { org: orgRaw, site } = Astro.locals;
+
+// 2. CORRECTION : PARSER LES DONNÉES JSON
+let org = orgRaw;
+if (orgRaw && typeof orgRaw === 'object') {
+  try {
+    org = { ...orgRaw };
+    if (typeof org.address === 'string') org.address = JSON.parse(org.address);
+    if (typeof org.contactpoint === 'string') org.contactpoint = JSON.parse(org.contactpoint);
+    if (typeof org.geo === 'string') org.geo = JSON.parse(org.geo);
+  } catch (e) {
+    console.error("Erreur de parsing JSON dans les données de l'organisation:", e);
+  }
+}
+
+// 3. LOGIQUE SPÉCIFIQUE À LA MISE EN PAGE
+const socialIconMap: { [key: string]: { icon: string; preset: string } } = {
+  linkedin: { icon: 'mdi:linkedin', preset: 'secondary' },
+  instagram: { icon: 'mdi:instagram', preset: 'accent' },
+  facebook: { icon: 'mdi:facebook', preset: 'secondary' },
+  twitter: { icon: 'mdi:twitter', preset: 'secondary' },
+  github: { icon: 'mdi:github', preset: 'default' },
+};
+const hasSocialLinks = org?.sameAs && Array.isArray(org.sameAs) && org.sameAs.length > 0;
+const hasCompanyDetails = org && (org.streetaddress || org.telephone || org.email || org.openingHours);
+const shouldDisplayMapSection = org && (org.geo || org.streetaddress);
+---
+
+<Layout 
+  title={`Contactez ${org?.name ?? site?.nom_site ?? 'nous'}`}
+  description={site?.breve_description ?? `Contactez ${org?.legalName ?? "l'entreprise"} pour toute question ou projet.`}
+>
+
+  <Section id="contact-main" preset="default" tag="section">
+    <Wrapper cols={2} gap="3rem" display="grid" alignItems="center">
+      
+      <Wrapper flexDirection="column" display="flex" gap="1.5rem">
+        <Text tag="h2">
+          Un échange simple, rapide, et sans engagement.
+        </Text>
+        <Text tag="p">
+          Vous voulez vous lancer, développer une idée, ou simplement poser une question ?
+        </Text>
+        <Text tag="p">
+          Nos experts sont là pour vous conseiller sur la meilleure manière de développer votre image sur internet.
+        </Text>
+        
+        {hasSocialLinks && (
+          <Wrapper flexDirection="column" display="flex" gap="1rem" marginTop="2rem">
+            <Text tag="h3">
+              Suivez-nous sur nos réseaux sociaux, et on en discute à votre rythme !
+            </Text>
+            <Wrapper display="flex" gap="1rem">
+              {org.sameAs.map(url => {
+                if (typeof url !== 'string') return null; 
+                const domain = Object.keys(socialIconMap).find(key => url.includes(key));
+                if (!domain) return null;
+                const { icon, preset } = socialIconMap[domain];
+                return (
+                  <Link 
+                    href={url}
+                    ariaLabel={`Visitez notre page ${domain}`}
+                    target="_blank"
+                    style="button" 
+                    shape="circle" 
+                    icon={{ name: icon }}
+                    preset={preset}
+                    classes="icon-only" 
+                  />
+                )
+              })}
+            </Wrapper>
+          </Wrapper>
+        )}
+      </Wrapper>
+
+      <Wrapper preset="secondary" border shadow shape="rounded">
+        <Form id="contact-form">
+          <Wrapper cols={2} gap="1rem" display="grid">
+            <Input id="prenom" name="prenom" type="text" label="Prénom"/>
+            <Input id="nom" name="nom" type="text" label="Nom"/>
+          </Wrapper>
+          <Input id="email" name="email" type="email" label="Email *" required />
+          <Input id="message" name="message" type="textarea" label="Message *" placeholder="Message" required rows={5}/>
+          <Button
+            type="submit"
+            text="Lançons la conversation"
+            preset="primary"
+            icon={{ name: 'mdi:rocket-launch-outline', side: 'left' }}
+          />
+        </Form>
+      </Wrapper>
+    </Wrapper>
+  </Section>
+
+  {hasCompanyDetails && (
+    <Section id="company-details" preset="secondary" tag="section">
+      <Wrapper cols={1} gap="2rem" textAlign="center">
+          <Text tag="h2" iconLeft="mdi:store-marker-outline">
+              Nos Coordonnées
+          </Text>
+      </Wrapper>
+      <Wrapper cols={3} gap="2rem" display="grid">
+          {org.streetaddress && (
+              <Wrapper preset="default" border shadow>
+                  <Text tag="h3" iconLeft="mdi:map-marker">Adresse</Text>
+                  <Text tag="p">
+                      {org.streetaddress}<br/>
+                      {org.postalcode ?? ''} {org.addresslocality ?? ''}<br/>
+                      {org.addresscountry ?? ''}
+                  </Text>
+              </Wrapper>
+          )}
+
+          {(org.telephone || org.email) && (
+              <Wrapper preset="default" border shadow>
+                  <Text tag="h3" iconLeft="mdi:phone-in-talk">Contact</Text>
+                  {org.telephone && <Text tag="p"><Link text={org.telephone} href={`tel:${org.telephone}`} icon={{name: 'mdi:phone', side: 'left'}}/> </Text>}
+                  {org.email && <Text tag="p"><Link text={org.email} href={`mailto:${org.email}`} icon={{name: 'mdi:email', side: 'left'}}/> </Text>}
+              </Wrapper>
+          )}
+
+          {typeof org.openingHours === 'string' && org.openingHours.length > 0 && (
+               <Wrapper preset="default" border shadow>
+                  <Text tag="h3" iconLeft="mdi:clock-outline">Horaires d'ouverture</Text>
+                  {org.openingHours.split(',').map(line => <Text tag="p">{line.trim()}</Text>)}
+               </Wrapper>
+          )}
+      </Wrapper>
+    </Section>
+  )}
+
+  {shouldDisplayMapSection && (
+    <Section id="map-location" preset="default" tag="section">
+      <Wrapper cols={1} gap="2rem">
+        <Text tag="h2" iconLeft="mdi:map-search-outline" textAlign="center">
+          Nous situer sur la carte
+        </Text>
+        <Wrapper border shadow shape="rounded" style="overflow: hidden; aspect-ratio: 16 / 9;">
+          <Map org={org} layer="hot" />
+        </Wrapper>
+      </Wrapper>
+    </Section>
+  )}
+
+</Layout>
+
+<script type="module">
+  function handleSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const data = new FormData(form);
+    const values = Object.fromEntries(data.entries());
+    alert(`Message envoyé ! (Démo)\n\nDonnées:\n${JSON.stringify(values, null, 2)}`);
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+      contactForm.addEventListener('submit', handleSubmit);
+    }
+  });
+</script>

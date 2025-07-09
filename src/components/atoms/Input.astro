@@ -9,11 +9,10 @@ interface IconProps {
 }
 
 interface Props {
-  id: string;
-  name: string;
+  id?: string;
+  name?: string;
   type?: 
-    | 'text' | 'email' | 'password' | 'number' | 'color' | 'date' | 'url' | 'textarea'
-    | 'radio' | 'checkbox' | 'select';
+    | 'text' | 'email' | 'password' | 'number' | 'color' | 'date' | 'url' | 'textarea' | 'radio' | 'checkbox' | 'select' | 'file' | 'search';
   label?: string;
   placeholder?: string;
   value?: string | number | boolean;

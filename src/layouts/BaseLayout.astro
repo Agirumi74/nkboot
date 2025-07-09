@@ -44,9 +44,6 @@ const {
   favicon16x16 = "/favicon-16x16.png",
 } = Astro.props;
 
-// Récupération instantanée des données globales
-const { org, design, site } = Astro.locals;
-
 
 ---
 
@@ -151,11 +148,11 @@ const { org, design, site } = Astro.locals;
     <meta name="theme-color" content="#ffffff" />
   </head>
   <body class="grid grid-rows-[auto,1fr,auto] min-h-screen">
-    <Header org={org} /> 
+    <Header /> 
     <main>
       <slot />
     </main>
-    <Footer org={org} />
+    <Footer />
 
   </body>
 </html>
