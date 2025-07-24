@@ -94,7 +94,8 @@ const logoalt = typeof org.alt_logo === "string" && org.alt_logo.trim() !== "" ?
       <button
         class="nav-toggle"
         aria-label="Menu"
-        onclick={() => document.querySelector('.mobile-nav')?.classList.toggle('open')}
+        aria-expanded="false"
+        data-mobile-toggle
         style="background: none; border: none; cursor: pointer;"
       >
         <Icon name="mdi:menu" size={26} />
@@ -104,7 +105,7 @@ const logoalt = typeof org.alt_logo === "string" && org.alt_logo.trim() !== "" ?
 
   <!-- MOBILE NAV -->
   {config.showNav && navlinks.length > 0 && (
-    <Wrapper class="mobile-nav" style="display: none; flex-direction: column; padding: 1rem 0;">
+    <Wrapper class="mobile-nav" data-mobile-nav style="display: none; flex-direction: column; padding: 1rem 0; background: white; border-top: 1px solid #ddd;">
       <ul style="list-style: none; padding: 0; margin: 0;">
         {navlinks.map(link => (
           <NavItem {...link} mode="mobile" />
@@ -139,6 +140,21 @@ const logoalt = typeof org.alt_logo === "string" && org.alt_logo.trim() !== "" ?
     display: none;
   }
 
+  /* Mobile Navigation */
+  .mobile-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-nav.open {
+    display: flex !important;
+  }
+
+  /* Responsive Breakpoints */
   @media (max-width: 1023px) {
     .main-nav,
     .auth-buttons,
@@ -154,6 +170,10 @@ const logoalt = typeof org.alt_logo === "string" && org.alt_logo.trim() !== "" ?
     .mobile-nav.open {
       display: flex !important;
     }
+
+    .header-grid {
+      grid-template-columns: auto 1fr auto !important;
+    }
   }
 
   @media (min-width: 1024px) {
@@ -161,4 +181,64 @@ const logoalt = typeof org.alt_logo === "string" && org.alt_logo.trim() !== "" ?
       display: none !important;
     }
   }
+
+  @media (max-width: 768px) {
+    .header-grid {
+      gap: 1rem !important;
+      padding: 0.75rem 1rem !important;
+    }
+
+    .brand {
+      gap: 0.5rem !important;
+    }
+
+    .header-actions {
+      gap: 0.5rem !important;
+    }
+  }
 </style>
+
+<script>
+  // Mobile navigation toggle functionality
+  function initMobileNav() {
+    const toggleButton = document.querySelector('[data-mobile-toggle]');
+    const mobileNav = document.querySelector('[data-mobile-nav]');
+    
+    if (toggleButton && mobileNav) {
+      toggleButton.addEventListener('click', () => {
+        const isOpen = mobileNav.classList.contains('open');
+        
+        if (isOpen) {
+          mobileNav.classList.remove('open');
+          toggleButton.setAttribute('aria-expanded', 'false');
+        } else {
+          mobileNav.classList.add('open');
+          toggleButton.setAttribute('aria-expanded', 'true');
+        }
+      });
+
+      // Close mobile nav when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!toggleButton.contains(e.target) && !mobileNav.contains(e.target)) {
+          mobileNav.classList.remove('open');
+          toggleButton.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Close mobile nav on escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
+          mobileNav.classList.remove('open');
+          toggleButton.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+  }
+
+  // Initialize when DOM is loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMobileNav);
+  } else {
+    initMobileNav();
+  }
+</script>

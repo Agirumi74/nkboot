@@ -12,6 +12,11 @@ export interface Props {
     name: string;
     url: string;
     icon?: string;
+    children?: {
+      name: string;
+      url: string;
+      icon?: string;
+    }[];
   }[];
   mode?: "desktop" | "mobile";
 }
@@ -30,17 +35,35 @@ const {
   <li class="nav-item" role="none">
     {dropdown && children.length > 0 ? (
       <div class="dropdown-wrapper" role="presentation">
-        <button class="dropdown-trigger" aria-haspopup="true" aria-expanded="false" type="button">
+        <button class="dropdown-trigger" aria-haspopup="true" aria-expanded="false" type="button" data-dropdown-trigger>
           {icon && <Icon name={icon} size={18} />}
           <Text tag="span">{name}</Text>
-          <Icon name="mdi:chevron-down" size={16} />
+          <Icon name="mdi:chevron-down" size={16} class="dropdown-chevron" />
         </button>
-        <ul class="dropdown-menu" role="menu" aria-label={name}>
+        <ul class="dropdown-menu" role="menu" aria-label={name} data-dropdown-menu>
           {children.map(child => (
             <li role="none">
-              <Link href={child.url} role="menuitem" tabindex="-1">
-                {child.icon && <Icon name={child.icon} size={16} />} {child.name}
-              </Link>
+              {child.children && child.children.length > 0 ? (
+                <div class="dropdown-submenu">
+                  <button class="dropdown-submenu-trigger" aria-haspopup="true" aria-expanded="false" type="button">
+                    {child.icon && <Icon name={child.icon} size={16} />} {child.name}
+                    <Icon name="mdi:chevron-right" size={14} class="submenu-chevron" />
+                  </button>
+                  <ul class="dropdown-submenu-content" role="menu" aria-label={child.name}>
+                    {child.children.map(subchild => (
+                      <li role="none">
+                        <Link href={subchild.url} role="menuitem" tabindex="-1">
+                          {subchild.icon && <Icon name={subchild.icon} size={14} />} {subchild.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <Link href={child.url} role="menuitem" tabindex="-1">
+                  {child.icon && <Icon name={child.icon} size={16} />} {child.name}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
@@ -52,16 +75,35 @@ const {
 ) : (
   <li role="none">
     {dropdown && children.length > 0 ? (
-      <details>
+      <details class="mobile-dropdown">
         <summary>
           {icon && <Icon name={icon} size={18} />} {name}
+          <Icon name="mdi:chevron-down" size={16} class="mobile-chevron" />
         </summary>
-        <ul>
+        <ul class="mobile-submenu">
           {children.map(child => (
             <li>
-              <Link href={child.url}>
-                {child.icon && <Icon name={child.icon} size={16} />} {child.name}
-              </Link>
+              {child.children && child.children.length > 0 ? (
+                <details class="mobile-dropdown-nested">
+                  <summary>
+                    {child.icon && <Icon name={child.icon} size={16} />} {child.name}
+                    <Icon name="mdi:chevron-down" size={14} class="mobile-chevron-nested" />
+                  </summary>
+                  <ul class="mobile-submenu-nested">
+                    {child.children.map(subchild => (
+                      <li>
+                        <Link href={subchild.url}>
+                          {subchild.icon && <Icon name={subchild.icon} size={14} />} {subchild.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ) : (
+                <Link href={child.url}>
+                  {child.icon && <Icon name={child.icon} size={16} />} {child.name}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
@@ -92,7 +134,22 @@ const {
     align-items: center;
     gap: 0.5rem;
     font: inherit;
-    padding: 0;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  .dropdown-trigger:hover,
+  .dropdown-trigger:focus {
+    background-color: #f5f5f5;
+  }
+
+  .dropdown-chevron {
+    transition: transform 0.2s ease;
+  }
+
+  .dropdown-wrapper[aria-expanded="true"] .dropdown-chevron {
+    transform: rotate(180deg);
   }
 
   .dropdown-menu {
@@ -104,42 +161,252 @@ const {
     border: 1px solid #ddd;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 0.5rem 0;
-    min-width: 180px;
+    min-width: 200px;
     z-index: 100;
+    border-radius: 6px;
   }
 
   .dropdown-wrapper:hover .dropdown-menu,
-  .dropdown-wrapper:focus-within .dropdown-menu {
+  .dropdown-wrapper:focus-within .dropdown-menu,
+  .dropdown-wrapper[data-open] .dropdown-menu {
     display: block;
   }
 
-  .dropdown-menu li a {
-    display: block;
-    padding: 0.5rem 1rem;
+  .dropdown-menu li {
+    position: relative;
+  }
+
+  .dropdown-menu li > a,
+  .dropdown-submenu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
     text-decoration: none;
     color: #333;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    transition: background-color 0.2s ease;
   }
 
-  .dropdown-menu li a:hover {
+  .dropdown-menu li > a:hover,
+  .dropdown-submenu-trigger:hover {
     background-color: #f5f5f5;
   }
 
-  details > summary {
+  /* Submenu styles */
+  .dropdown-submenu {
+    position: relative;
+  }
+
+  .dropdown-submenu-content {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 0.5rem 0;
+    min-width: 180px;
+    z-index: 101;
+    border-radius: 6px;
+  }
+
+  .dropdown-submenu:hover .dropdown-submenu-content,
+  .dropdown-submenu:focus-within .dropdown-submenu-content {
+    display: block;
+  }
+
+  .submenu-chevron {
+    margin-left: auto;
+  }
+
+  /* Mobile styles */
+  .mobile-dropdown > summary {
     cursor: pointer;
     list-style: none;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
   }
 
-  details > summary::-webkit-details-marker {
+  .mobile-dropdown > summary::-webkit-details-marker {
     display: none;
   }
 
-  details ul {
+  .mobile-submenu {
     list-style: none;
-    padding-left: 1rem;
-    margin: 0.25rem 0 0 0;
+    padding: 0;
+    margin: 0;
+    background-color: #f8f9fa;
+  }
+
+  .mobile-submenu a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    text-decoration: none;
+    color: #333;
+    border-bottom: 1px solid #eee;
+  }
+
+  .mobile-submenu a:hover {
+    background-color: #e9ecef;
+  }
+
+  .mobile-dropdown-nested > summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-bottom: 1px solid #eee;
+    background-color: #f8f9fa;
+  }
+
+  .mobile-dropdown-nested > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-submenu-nested {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: #f1f3f4;
+  }
+
+  .mobile-submenu-nested a {
+    padding: 0.5rem 2rem;
+    background-color: #f1f3f4;
+  }
+
+  .mobile-chevron,
+  .mobile-chevron-nested {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+  }
+
+  .mobile-dropdown[open] .mobile-chevron,
+  .mobile-dropdown-nested[open] .mobile-chevron-nested {
+    transform: rotate(180deg);
+  }
+
+  /* Accessibility improvements */
+  @media (prefers-reduced-motion: reduce) {
+    .dropdown-chevron,
+    .mobile-chevron,
+    .mobile-chevron-nested {
+      transition: none;
+    }
   }
 </style>
+
+<script>
+  // Enhanced dropdown functionality for desktop
+  function initDropdowns() {
+    const dropdownTriggers = document.querySelectorAll('[data-dropdown-trigger]');
+    
+    dropdownTriggers.forEach(trigger => {
+      const wrapper = trigger.closest('.dropdown-wrapper');
+      const menu = wrapper?.querySelector('[data-dropdown-menu]');
+      
+      if (!wrapper || !menu) return;
+
+      // Click handler for dropdown trigger
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const isOpen = wrapper.hasAttribute('data-open');
+        
+        // Close all other dropdowns
+        document.querySelectorAll('.dropdown-wrapper[data-open]').forEach(w => {
+          if (w !== wrapper) {
+            w.removeAttribute('data-open');
+            const btn = w.querySelector('[data-dropdown-trigger]');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+          }
+        });
+        
+        if (isOpen) {
+          wrapper.removeAttribute('data-open');
+          trigger.setAttribute('aria-expanded', 'false');
+        } else {
+          wrapper.setAttribute('data-open', '');
+          trigger.setAttribute('aria-expanded', 'true');
+        }
+      });
+
+      // Keyboard navigation
+      trigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          trigger.click();
+        } else if (e.key === 'Escape') {
+          wrapper.removeAttribute('data-open');
+          trigger.setAttribute('aria-expanded', 'false');
+          trigger.focus();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          wrapper.setAttribute('data-open', '');
+          trigger.setAttribute('aria-expanded', 'true');
+          const firstLink = menu.querySelector('a');
+          if (firstLink) firstLink.focus();
+        }
+      });
+
+      // Menu item keyboard navigation
+      const menuItems = menu.querySelectorAll('a, button');
+      menuItems.forEach((item, index) => {
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextItem = menuItems[index + 1];
+            if (nextItem) nextItem.focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevItem = menuItems[index - 1];
+            if (prevItem) {
+              prevItem.focus();
+            } else {
+              trigger.focus();
+            }
+          } else if (e.key === 'Escape') {
+            wrapper.removeAttribute('data-open');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.focus();
+          }
+        });
+      });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown-wrapper')) {
+        document.querySelectorAll('.dropdown-wrapper[data-open]').forEach(wrapper => {
+          wrapper.removeAttribute('data-open');
+          const trigger = wrapper.querySelector('[data-dropdown-trigger]');
+          if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
+      }
+    });
+  }
+
+  // Initialize when DOM is loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDropdowns);
+  } else {
+    initDropdowns();
+  }
+</script>
