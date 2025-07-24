@@ -1,0 +1,193 @@
+---
+import Layout from "@layouts/BaseLayout.astro";
+import Section from "@atoms/Section.astro";
+import Wrapper from "@atoms/Wrapper2.astro";
+import Text from "@atoms/Text.astro";
+import Button from "@atoms/Button.astro";
+import List from "@atoms/List.astro";
+import ValueCard from "@cards/ValueCard.astro";
+import CounterUp from "@molecules/CounterUp.astro";
+import { Image } from "astro:assets";
+
+// Données fallback pour une démo complète
+const orgData = {
+  name: "Nexus Innovations",
+  legalName: "Nexus Innovations SAS",
+  description: "Une entreprise technologique spécialisée dans le développement de solutions numériques innovantes.",
+  foundingDate: "2020-10-23",
+  foundingLocation: "Lyon, France",
+  numberOfEmployees: 75,
+  taxID: "123 456 789",
+  vatID: "FR00123456789",
+  capital: "500 000 €",
+  activities: [
+    "Développement de logiciels sur mesure",
+    "Conseil en transformation digitale", 
+    "Solutions d'intelligence artificielle",
+    "Développement d'applications web et mobile"
+  ],
+  values: [
+    "Innovation continue",
+    "Excellence technique",
+    "Satisfaction client",
+    "Responsabilité sociale"
+  ],
+  certifications: [
+    "ISO 9001:2015",
+    "ISO 27001",
+    "Certification Qualiopi"
+  ],
+  awards: [
+    "Best B2B Solution 2023",
+    "Tech Innovator of the Year",
+    "Top Workplace Award"
+  ]
+};
+---
+
+<Layout title={`L'entreprise - ${orgData.name}`} description={`Découvrez ${orgData.name}, notre histoire, nos valeurs et notre expertise.`}>
+
+  <!-- Section Hero -->
+  <Section id="hero-entreprise" preset="primary" tag="header">
+    <Wrapper cols={1} textAlign="center" gap="2rem">
+      <Text tag="h1">L'Entreprise</Text>
+      <Text tag="p" preset="lead" maxWidth="max-w-3xl" margin="mx-auto">
+        Découvrez qui nous sommes, notre histoire et ce qui nous anime au quotidien.
+      </Text>
+    </Wrapper>
+  </Section>
+
+  <!-- Présentation générale -->
+  <Section id="presentation" preset="default" tag="section">
+    <Wrapper cols={2} gap="3rem" display="grid" alignItems="center">
+      <Wrapper>
+        <Text tag="h2" iconLeft="mdi:office-building">Notre Entreprise</Text>
+        <Text tag="p" marginBottom="1rem">
+          {orgData.description}
+        </Text>
+        <Text tag="p" marginBottom="1rem">
+          Fondée en {new Date(orgData.foundingDate).getFullYear()} à {orgData.foundingLocation}, 
+          {orgData.name} s'est rapidement imposée comme un acteur majeur de l'innovation technologique.
+        </Text>
+        <Text tag="p">
+          Avec une équipe de {orgData.numberOfEmployees} collaborateurs passionnés, nous accompagnons 
+          nos clients dans leur transformation digitale en proposant des solutions sur mesure et performantes.
+        </Text>
+      </Wrapper>
+      <Wrapper>
+        <Image 
+          src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop" 
+          alt="Bureau moderne de l'entreprise" 
+          width={600} 
+          height={400}
+          style="border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);"
+        />
+      </Wrapper>
+    </Wrapper>
+  </Section>
+
+  <!-- Statistiques clés -->
+  <Section id="stats-entreprise" preset="secondary" tag="section">
+    <Wrapper cols={1} textAlign="center" marginBottom="3rem">
+      <Text tag="h2">Quelques chiffres</Text>
+      <Text tag="p">Les données qui témoignent de notre croissance et de notre expertise.</Text>
+    </Wrapper>
+    <Wrapper cols={4} gap="2rem" display="grid">
+      <CounterUp endValue={orgData.numberOfEmployees} label="Collaborateurs" preset="primary" />
+      <CounterUp endValue={new Date().getFullYear() - new Date(orgData.foundingDate).getFullYear()} label="Années d'expérience" suffix=" ans" preset="accent" />
+      <CounterUp endValue={orgData.awards.length} label="Prix remportés" preset="secondary" />
+      <CounterUp endValue={150} label="Projets réalisés" suffix="+" preset="primary" />
+    </Wrapper>
+  </Section>
+
+  <!-- Domaines d'activité -->
+  <Section id="activites" preset="default" tag="section">
+    <Wrapper cols={2} gap="3rem" display="grid">
+      <Wrapper>
+        <Text tag="h2" iconLeft="mdi:rocket-launch">Nos Domaines d'Activité</Text>
+        <Text tag="p" marginBottom="2rem">
+          Nous intervenons sur l'ensemble de la chaîne de valeur numérique pour proposer 
+          des solutions complètes et adaptées aux besoins de chaque client.
+        </Text>
+        <List
+          items={orgData.activities.map(activity => ({ text: activity, icon: "mdi:check-circle" }))}
+          showMarkers={false}
+          spacing="0.75rem"
+        />
+      </Wrapper>
+      <Wrapper>
+        <Text tag="h2" iconLeft="mdi:heart">Nos Valeurs</Text>
+        <Text tag="p" marginBottom="2rem">
+          Ces principes fondamentaux guident nos actions et nos décisions au quotidien.
+        </Text>
+        <Wrapper cols={2} gap="1.5rem" display="grid">
+          {orgData.values.map((value, index) => (
+            <ValueCard 
+              icon={`mdi:${index === 0 ? 'lightbulb' : index === 1 ? 'star' : index === 2 ? 'heart' : 'handshake'}`}
+              title={value}
+              description={`Cette valeur est au cœur de notre identité d'entreprise.`}
+            />
+          ))}
+        </Wrapper>
+      </Wrapper>
+    </Wrapper>
+  </Section>
+
+  <!-- Certifications et reconnaissances -->
+  <Section id="certifications" preset="accent" tag="section">
+    <Wrapper cols={1} textAlign="center" marginBottom="3rem">
+      <Text tag="h2">Certifications & Reconnaissances</Text>
+      <Text tag="p">La qualité et l'excellence de nos services sont reconnues par nos pairs et nos clients.</Text>
+    </Wrapper>
+    <Wrapper cols={3} gap="2rem" display="grid">
+      <Wrapper preset="default" border shadow textAlign="center">
+        <Text tag="h3" iconLeft="mdi:certificate">Certifications</Text>
+        <List
+          items={orgData.certifications}
+          showMarkers={false}
+          spacing="0.5rem"
+          textAlign="left"
+        />
+      </Wrapper>
+      <Wrapper preset="default" border shadow textAlign="center">
+        <Text tag="h3" iconLeft="mdi:trophy">Prix & Awards</Text>
+        <List
+          items={orgData.awards}
+          showMarkers={false}
+          spacing="0.5rem"
+          textAlign="left"
+        />
+      </Wrapper>
+      <Wrapper preset="default" border shadow textAlign="center">
+        <Text tag="h3" iconLeft="mdi:information">Informations légales</Text>
+        <List
+          items={[
+            `Raison sociale : ${orgData.legalName}`,
+            `SIRET : ${orgData.taxID}`,
+            `TVA : ${orgData.vatID}`,
+            `Capital : ${orgData.capital}`
+          ]}
+          showMarkers={false}
+          spacing="0.5rem"
+          textAlign="left"
+        />
+      </Wrapper>
+    </Wrapper>
+  </Section>
+
+  <!-- Call to Action -->
+  <Section id="cta-entreprise" preset="primary" tag="section">
+    <Wrapper cols={1} textAlign="center">
+      <Text tag="h2">Vous souhaitez en savoir plus ?</Text>
+      <Text tag="p" preset="lead" maxWidth="max-w-2xl" margin="mx-auto">
+        N'hésitez pas à nous contacter pour découvrir comment nous pouvons vous accompagner 
+        dans vos projets de transformation digitale.
+      </Text>
+      <Wrapper marginTop="2rem" display="flex" gap="1rem" justifyContent="center" flexWrap="wrap">
+        <Button href="/contact" text="Nous contacter" preset="accent" size="large" icon={{ name: 'mdi:email', side: 'left' }} />
+        <Button href="/apropos/lequipe" text="Rencontrer l'équipe" preset="secondary" size="large" border icon={{ name: 'mdi:account-group', side: 'right' }} />
+      </Wrapper>
+    </Wrapper>
+  </Section>
+
+</Layout>
