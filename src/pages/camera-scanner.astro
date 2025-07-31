@@ -1,0 +1,295 @@
+---
+import Layout from "@layouts/BaseLayout.astro";
+import Text from "@atoms/Text.astro";
+import Section from "@atoms/Section.astro";
+import Wrapper from "@atoms/Wrapper2.astro";
+import CameraCapture from "@organisms/CameraCapture.astro";
+import QRScanner from "@organisms/QRScanner.astro";
+---
+
+<Layout title="Camera et Scanner - Démonstration" description="Démonstration des fonctionnalités de capture photo et de scan de codes QR/barres.">
+  {(org) => (
+    <>
+      <!-- Hero Section -->
+      <Section id="hero" tag="header" preset="primary" display="flex" minHeight="40vh" justifyContent="center" alignItems="center">
+        <Wrapper cols={1} display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap="2rem">
+          <Text tag="h1">
+            📸 Camera & Scanner
+          </Text>
+          <Text tag="p">
+            Démonstration des fonctionnalités de capture photo et de scan de codes QR/barres
+          </Text>
+        </Wrapper>
+      </Section>
+
+      <!-- Camera Capture Section -->
+      <Section id="camera-section" tag="section" preset="default">
+        <Wrapper cols={1} gap="2rem">
+          <Text tag="h2" iconLeft="mdi:camera">
+            Capture Photo
+          </Text>
+          <Text tag="p">
+            Utilisez votre caméra pour prendre des photos. La fonctionnalité fonctionne sur desktop, mobile et tablette.
+          </Text>
+        </Wrapper>
+
+        <Wrapper cols={1} gap="2rem" display="grid" maxWidth="800px" margin="0 auto">
+          <!-- Primary Camera -->
+          <Section tag="div" preset="default">
+            <Text tag="h3" iconLeft="mdi:camera-outline">
+              Camera Primary
+            </Text>
+            <CameraCapture 
+              id="camera-primary"
+              preset="primary"
+              showPreview={true}
+              allowDownload={true}
+              maxHeight="500px"
+            />
+          </Section>
+
+          <!-- Secondary Camera (Compact) -->
+          <Section tag="div" preset="default">
+            <Text tag="h3" iconLeft="mdi:camera-front">
+              Camera Compact
+            </Text>
+            <CameraCapture 
+              id="camera-compact"
+              preset="secondary"
+              showPreview={false}
+              allowDownload={false}
+              maxHeight="300px"
+            />
+          </Section>
+        </Wrapper>
+      </Section>
+
+      <!-- QR Scanner Section -->
+      <Section id="scanner-section" tag="section" preset="accent">
+        <Wrapper cols={1} gap="2rem">
+          <Text tag="h2" iconLeft="mdi:qrcode-scan">
+            Scanner QR / Code-barres
+          </Text>
+          <Text tag="p">
+            Scannez des codes QR et codes-barres en temps réel. L'historique des scans est automatiquement sauvegardé.
+          </Text>
+        </Wrapper>
+
+        <Wrapper cols={1} gap="2rem" display="grid" maxWidth="800px" margin="0 auto">
+          <!-- Primary QR Scanner -->
+          <Section tag="div" preset="default">
+            <Text tag="h3" iconLeft="mdi:qrcode">
+              Scanner Principal
+            </Text>
+            <QRScanner 
+              id="qr-scanner-main"
+              preset="primary"
+              showHistory={true}
+              copyToClipboard={true}
+              maxHeight="500px"
+            />
+          </Section>
+
+          <!-- Compact QR Scanner -->
+          <Section tag="div" preset="default">
+            <Text tag="h3" iconLeft="mdi:barcode-scan">
+              Scanner Compact
+            </Text>
+            <QRScanner 
+              id="qr-scanner-compact"
+              preset="accent"
+              showHistory={false}
+              copyToClipboard={true}
+              maxHeight="300px"
+            />
+          </Section>
+        </Wrapper>
+      </Section>
+
+      <!-- Features Section -->
+      <Section id="features" tag="section" preset="default">
+        <Wrapper cols={1} gap="2rem">
+          <Text tag="h2" iconLeft="mdi:feature-search">
+            Fonctionnalités
+          </Text>
+        </Wrapper>
+
+        <Wrapper cols={2} gap="2rem" display="grid">
+          <!-- Camera Features -->
+          <Section tag="div" preset="default" border shadow>
+            <Text tag="h3" iconLeft="mdi:camera-enhance">
+              📸 Capture Photo
+            </Text>
+            <ul>
+              <li>✅ Accès camera front/back</li>
+              <li>✅ Changement de caméra en un clic</li>
+              <li>✅ Aperçu en temps réel</li>
+              <li>✅ Capture haute qualité</li>
+              <li>✅ Téléchargement automatique</li>
+              <li>✅ Compatible mobile/desktop</li>
+              <li>✅ Gestion des permissions</li>
+              <li>✅ Messages d'erreur explicites</li>
+            </ul>
+          </Section>
+
+          <!-- Scanner Features -->
+          <Section tag="div" preset="default" border shadow>
+            <Text tag="h3" iconLeft="mdi:qrcode-plus">
+              🔍 Scanner QR/Codes
+            </Text>
+            <ul>
+              <li>✅ Scan QR codes en temps réel</li>
+              <li>✅ Support codes-barres multiples</li>
+              <li>✅ Détection automatique</li>
+              <li>✅ Copie vers presse-papier</li>
+              <li>✅ Historique des scans</li>
+              <li>✅ Sauvegarde locale</li>
+              <li>✅ Liens cliquables</li>
+              <li>✅ Interface intuitive</li>
+            </ul>
+          </Section>
+        </Wrapper>
+      </Section>
+
+      <!-- Compatibility Section -->
+      <Section id="compatibility" tag="section" preset="secondary">
+        <Wrapper cols={1} gap="2rem">
+          <Text tag="h2" iconLeft="mdi:devices">
+            Compatibilité
+          </Text>
+          <Text tag="p">
+            Ces fonctionnalités sont optimisées pour fonctionner sur tous les appareils modernes.
+          </Text>
+        </Wrapper>
+
+        <Wrapper cols={3} gap="2rem" display="grid">
+          <!-- Desktop -->
+          <Section tag="div" preset="default" border>
+            <Text tag="h3" iconLeft="mdi:desktop-mac">
+              🖥️ Desktop
+            </Text>
+            <ul>
+              <li>Chrome 53+</li>
+              <li>Firefox 36+</li>
+              <li>Safari 11+</li>
+              <li>Edge 79+</li>
+            </ul>
+          </Section>
+
+          <!-- Mobile -->
+          <Section tag="div" preset="default" border>
+            <Text tag="h3" iconLeft="mdi:cellphone">
+              📱 Mobile
+            </Text>
+            <ul>
+              <li>iOS Safari 11+</li>
+              <li>Chrome Mobile 53+</li>
+              <li>Firefox Mobile 68+</li>
+              <li>Samsung Internet 6.2+</li>
+            </ul>
+          </Section>
+
+          <!-- Tablet -->
+          <Section tag="div" preset="default" border>
+            <Text tag="h3" iconLeft="mdi:tablet">
+              🔲 Tablette
+            </Text>
+            <ul>
+              <li>iPad Safari 11+</li>
+              <li>Android Chrome 53+</li>
+              <li>Surface Edge 79+</li>
+              <li>Interface tactile optimisée</li>
+            </ul>
+          </Section>
+        </Wrapper>
+      </Section>
+
+      <!-- Usage Instructions -->
+      <Section id="instructions" tag="section" preset="default">
+        <Wrapper cols={1} gap="2rem">
+          <Text tag="h2" iconLeft="mdi:help-circle">
+            Instructions d'utilisation
+          </Text>
+        </Wrapper>
+
+        <Wrapper cols={2} gap="2rem" display="grid">
+          <!-- Camera Instructions -->
+          <Section tag="div" preset="default">
+            <Text tag="h3" iconLeft="mdi:camera-timer">
+              📸 Utilisation de la Camera
+            </Text>
+            <ol>
+              <li><strong>Cliquer sur "Démarrer la caméra"</strong> - Autorisez l'accès à la caméra</li>
+              <li><strong>Changer de caméra</strong> - Utilisez le bouton "Changer caméra" pour basculer front/back</li>
+              <li><strong>Capturer</strong> - Cliquez sur "Capturer" pour prendre la photo</li>
+              <li><strong>Télécharger</strong> - La photo apparaît dans l'aperçu avec un lien de téléchargement</li>
+              <li><strong>Arrêter</strong> - Cliquez sur "Arrêter" pour fermer la caméra</li>
+            </ol>
+          </Section>
+
+          <!-- Scanner Instructions -->
+          <Section tag="div" preset="default">
+            <Text tag="h3" iconLeft="mdi:qrcode-edit">
+              🔍 Utilisation du Scanner
+            </Text>
+            <ol>
+              <li><strong>Démarrer le scanner</strong> - Autorisez l'accès à la caméra</li>
+              <li><strong>Positionner le code</strong> - Placez le QR code ou code-barres dans le cadre</li>
+              <li><strong>Détection automatique</strong> - Le scan se fait automatiquement</li>
+              <li><strong>Copier le résultat</strong> - Utilisez le bouton "Copier" pour copier le contenu</li>
+              <li><strong>Historique</strong> - Tous les scans sont sauvegardés dans l'historique</li>
+            </ol>
+          </Section>
+        </Wrapper>
+      </Section>
+
+      <!-- Troubleshooting Section -->
+      <Section id="troubleshooting" tag="section" preset="default">
+        <Wrapper cols={1} gap="2rem">
+          <Text tag="h2" iconLeft="mdi:alert-circle">
+            Dépannage
+          </Text>
+        </Wrapper>
+
+        <Wrapper cols={1} gap="1.5rem">
+          <Section tag="div" preset="default" border>
+            <Text tag="h3" iconLeft="mdi:camera-off">
+              ❌ "Accès à la caméra refusé"
+            </Text>
+            <ul>
+              <li>Vérifiez les paramètres de votre navigateur</li>
+              <li>Assurez-vous d'être sur une connexion HTTPS</li>
+              <li>Rechargez la page et accordez l'autorisation</li>
+              <li>Vérifiez qu'aucune autre application n'utilise la caméra</li>
+            </ul>
+          </Section>
+
+          <Section tag="div" preset="default" border>
+            <Text tag="h3" iconLeft="mdi:camera-wireless-outline">
+              🔍 "Aucune caméra trouvée"
+            </Text>
+            <ul>
+              <li>Vérifiez que votre appareil dispose d'une caméra</li>
+              <li>Redémarrez votre navigateur</li>
+              <li>Mettez à jour votre navigateur vers la dernière version</li>
+              <li>Testez sur un autre navigateur</li>
+            </ul>
+          </Section>
+
+          <Section tag="div" preset="default" border>
+            <Text tag="h3" iconLeft="mdi:qrcode-remove">
+              📱 "Le scanner ne détecte pas les codes"
+            </Text>
+            <ul>
+              <li>Assurez-vous que le code est bien éclairé</li>
+              <li>Tenez l'appareil stable</li>
+              <li>Rapprochez ou éloignez le code de la caméra</li>
+              <li>Nettoyez l'objectif de la caméra</li>
+            </ul>
+          </Section>
+        </Wrapper>
+      </Section>
+
+    </>
+  )}
+</Layout>

@@ -1,0 +1,862 @@
+---
+export interface Props {
+  id?: string;
+  className?: string;
+  preset?: 'default' | 'primary' | 'secondary' | 'accent';
+  showHistory?: boolean;
+  copyToClipboard?: boolean;
+  maxWidth?: string;
+  maxHeight?: string;
+  scanFormats?: string[];
+}
+
+const {
+  id = 'qr-scanner',
+  className = '',
+  preset = 'default',
+  showHistory = true,
+  copyToClipboard = true,
+  maxWidth = '100%',
+  maxHeight = '400px',
+  scanFormats = ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8'],
+  ...rest
+} = Astro.props;
+---
+
+<div 
+  class={`qr-scanner qr-scanner--${preset} ${className}`}
+  id={id}
+  style={`max-width: ${maxWidth}; max-height: ${maxHeight};`}
+  {...rest}
+>
+  <!-- Scanner Controls -->
+  <div class="scanner-controls">
+    <button type="button" class="scanner-btn scanner-btn--start" id={`${id}-start`}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm1.5-8.5v3h3v-3h-3zM19 5h-6v6h6V5zm-8.5 9.5v3h3v-3h-3M13 13h6v6h-6v-6z"/>
+      </svg>
+      Démarrer le scanner
+    </button>
+    
+    <button type="button" class="scanner-btn scanner-btn--stop" id={`${id}-stop`} style="display: none;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 6h12v12H6z"/>
+      </svg>
+      Arrêter
+    </button>
+    
+    <button type="button" class="scanner-btn scanner-btn--switch" id={`${id}-switch`} style="display: none;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.12 8l.88.88L12 7l2 1.88.88-.88L12 5.12 9.12 8zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+      </svg>
+      Changer caméra
+    </button>
+  </div>
+
+  <!-- Scanner Video Stream -->
+  <div class="scanner-video-container">
+    <video 
+      id={`${id}-video`}
+      class="scanner-video"
+      autoplay
+      muted
+      playsinline
+      style="display: none;"
+    ></video>
+    
+    <canvas 
+      id={`${id}-canvas`}
+      class="scanner-canvas"
+      style="display: none;"
+    ></canvas>
+    
+    <!-- Scanner Overlay -->
+    <div class="scanner-overlay" id={`${id}-overlay`} style="display: none;">
+      <div class="scanner-frame">
+        <div class="scanner-corner scanner-corner--tl"></div>
+        <div class="scanner-corner scanner-corner--tr"></div>
+        <div class="scanner-corner scanner-corner--bl"></div>
+        <div class="scanner-corner scanner-corner--br"></div>
+      </div>
+      <div class="scanner-line"></div>
+    </div>
+    
+    <div class="scanner-placeholder" id={`${id}-placeholder`}>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm1.5-8.5v3h3v-3h-3zM19 5h-6v6h6V5zm-8.5 9.5v3h3v-3h-3M13 13h6v6h-6v-6z"/>
+      </svg>
+      <p>Cliquez sur "Démarrer le scanner" pour scanner des codes QR/barres</p>
+    </div>
+  </div>
+
+  <!-- Error Messages -->
+  <div class="scanner-error" id={`${id}-error`} style="display: none;"></div>
+
+  <!-- Results Section -->
+  <div class="scanner-results" id={`${id}-results`} style="display: none;">
+    <h4>Résultat du scan</h4>
+    <div class="scanner-result-item" id={`${id}-current-result`}>
+      <div class="scanner-result-content">
+        <span class="scanner-result-type" id={`${id}-result-type`}></span>
+        <div class="scanner-result-text" id={`${id}-result-text`}></div>
+      </div>
+      {copyToClipboard && (
+        <button 
+          type="button" 
+          class="scanner-btn scanner-btn--copy" 
+          id={`${id}-copy`}
+          title="Copier dans le presse-papier"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+          Copier
+        </button>
+      )}
+    </div>
+  </div>
+
+  <!-- History Section -->
+  {showHistory && (
+    <div class="scanner-history" id={`${id}-history`} style="display: none;">
+      <div class="scanner-history-header">
+        <h4>Historique des scans</h4>
+        <button 
+          type="button" 
+          class="scanner-btn scanner-btn--clear" 
+          id={`${id}-clear-history`}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+          Effacer
+        </button>
+      </div>
+      <div class="scanner-history-list" id={`${id}-history-list`}></div>
+    </div>
+  )}
+</div>
+
+<script>
+  class QRScanner {
+    constructor(containerId) {
+      this.containerId = containerId;
+      this.container = document.getElementById(containerId);
+      this.video = document.getElementById(`${containerId}-video`);
+      this.canvas = document.getElementById(`${containerId}-canvas`);
+      this.placeholder = document.getElementById(`${containerId}-placeholder`);
+      this.overlay = document.getElementById(`${containerId}-overlay`);
+      this.errorDiv = document.getElementById(`${containerId}-error`);
+      this.results = document.getElementById(`${containerId}-results`);
+      this.currentResult = document.getElementById(`${containerId}-current-result`);
+      this.resultType = document.getElementById(`${containerId}-result-type`);
+      this.resultText = document.getElementById(`${containerId}-result-text`);
+      this.history = document.getElementById(`${containerId}-history`);
+      this.historyList = document.getElementById(`${containerId}-history-list`);
+      
+      this.startBtn = document.getElementById(`${containerId}-start`);
+      this.stopBtn = document.getElementById(`${containerId}-stop`);
+      this.switchBtn = document.getElementById(`${containerId}-switch`);
+      this.copyBtn = document.getElementById(`${containerId}-copy`);
+      this.clearHistoryBtn = document.getElementById(`${containerId}-clear-history`);
+      
+      this.stream = null;
+      this.currentFacingMode = 'environment'; // Prefer back camera for scanning
+      this.scanning = false;
+      this.scanHistory = [];
+      
+      this.init();
+    }
+    
+    init() {
+      this.startBtn?.addEventListener('click', () => this.startScanner());
+      this.stopBtn?.addEventListener('click', () => this.stopScanner());
+      this.switchBtn?.addEventListener('click', () => this.switchCamera());
+      this.copyBtn?.addEventListener('click', () => this.copyToClipboard());
+      this.clearHistoryBtn?.addEventListener('click', () => this.clearHistory());
+      
+      // Load history from localStorage
+      this.loadHistory();
+    }
+    
+    async startScanner() {
+      try {
+        this.hideError();
+        this.showLoading();
+        
+        const constraints = {
+          video: {
+            facingMode: this.currentFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        };
+        
+        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+        this.video.srcObject = this.stream;
+        
+        this.video.onloadedmetadata = () => {
+          this.placeholder.style.display = 'none';
+          this.video.style.display = 'block';
+          this.overlay.style.display = 'block';
+          this.showScannerControls();
+          this.startScanning();
+        };
+        
+      } catch (error) {
+        this.handleError(error);
+      }
+    }
+    
+    async switchCamera() {
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop());
+      }
+      
+      this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
+      await this.startScanner();
+    }
+    
+    startScanning() {
+      this.scanning = true;
+      this.scanFrame();
+    }
+    
+    scanFrame() {
+      if (!this.scanning || !this.video) return;
+      
+      const canvas = this.canvas;
+      const context = canvas.getContext('2d');
+      
+      canvas.width = this.video.videoWidth;
+      canvas.height = this.video.videoHeight;
+      
+      if (canvas.width > 0 && canvas.height > 0) {
+        context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
+        
+        // Try to decode QR/barcode using a simple detection approach
+        // In a real implementation, you'd use a library like QuaggaJS or ZXing
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        this.detectCode(imageData);
+      }
+      
+      // Continue scanning
+      if (this.scanning) {
+        requestAnimationFrame(() => this.scanFrame());
+      }
+    }
+    
+    detectCode(imageData) {
+      // Placeholder for actual QR/barcode detection
+      // This is a simplified version - in production, use libraries like:
+      // - QuaggaJS for barcodes
+      // - jsQR for QR codes
+      // - ZXing for comprehensive support
+      
+      // Simulate detection for demo purposes
+      if (Math.random() < 0.01) { // 1% chance per frame for demo
+        const fakeResults = [
+          { type: 'QR Code', data: 'https://example.com/product/123' },
+          { type: 'Code 128', data: '1234567890123' },
+          { type: 'QR Code', data: 'Hello World!' },
+          { type: 'EAN-13', data: '1234567890123' }
+        ];
+        
+        const result = fakeResults[Math.floor(Math.random() * fakeResults.length)];
+        this.onCodeDetected(result.type, result.data);
+      }
+    }
+    
+    onCodeDetected(type, data) {
+      this.showResult(type, data);
+      this.addToHistory(type, data);
+      
+      // Brief pause after detection
+      this.scanning = false;
+      setTimeout(() => {
+        if (this.stream) {
+          this.scanning = true;
+          this.scanFrame();
+        }
+      }, 2000);
+    }
+    
+    showResult(type, data) {
+      if (this.resultType) this.resultType.textContent = type;
+      if (this.resultText) {
+        this.resultText.textContent = data;
+        
+        // If it's a URL, make it clickable
+        if (this.isUrl(data)) {
+          this.resultText.innerHTML = `<a href="${data}" target="_blank" rel="noopener">${data}</a>`;
+        }
+      }
+      
+      this.results.style.display = 'block';
+      
+      // Store current result for copying
+      this.currentData = data;
+    }
+    
+    addToHistory(type, data) {
+      const timestamp = new Date().toLocaleString();
+      const historyItem = { type, data, timestamp };
+      
+      // Avoid duplicates
+      if (!this.scanHistory.some(item => item.data === data)) {
+        this.scanHistory.unshift(historyItem);
+        
+        // Limit history to 50 items
+        if (this.scanHistory.length > 50) {
+          this.scanHistory = this.scanHistory.slice(0, 50);
+        }
+        
+        this.updateHistoryDisplay();
+        this.saveHistory();
+      }
+    }
+    
+    updateHistoryDisplay() {
+      if (!this.historyList) return;
+      
+      this.historyList.innerHTML = '';
+      
+      this.scanHistory.forEach((item, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'scanner-history-item';
+        
+        const content = this.isUrl(item.data) 
+          ? `<a href="${item.data}" target="_blank" rel="noopener">${item.data}</a>`
+          : item.data;
+        
+        historyItem.innerHTML = `
+          <div class="scanner-history-content">
+            <span class="scanner-history-type">${item.type}</span>
+            <div class="scanner-history-text">${content}</div>
+            <small class="scanner-history-time">${item.timestamp}</small>
+          </div>
+          <button type="button" class="scanner-btn scanner-btn--copy-small" onclick="navigator.clipboard?.writeText('${item.data}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+          </button>
+        `;
+        
+        this.historyList.appendChild(historyItem);
+      });
+      
+      this.history.style.display = this.scanHistory.length > 0 ? 'block' : 'none';
+    }
+    
+    async copyToClipboard() {
+      if (!this.currentData) return;
+      
+      try {
+        await navigator.clipboard.writeText(this.currentData);
+        this.showTempMessage('Copié dans le presse-papier!');
+      } catch (error) {
+        console.error('Copy failed:', error);
+        this.showTempMessage('Erreur lors de la copie');
+      }
+    }
+    
+    clearHistory() {
+      this.scanHistory = [];
+      this.updateHistoryDisplay();
+      this.saveHistory();
+      this.showTempMessage('Historique effacé');
+    }
+    
+    saveHistory() {
+      try {
+        localStorage.setItem(`qr-scanner-history-${this.containerId}`, JSON.stringify(this.scanHistory));
+      } catch (error) {
+        console.error('Failed to save history:', error);
+      }
+    }
+    
+    loadHistory() {
+      try {
+        const saved = localStorage.getItem(`qr-scanner-history-${this.containerId}`);
+        if (saved) {
+          this.scanHistory = JSON.parse(saved);
+          this.updateHistoryDisplay();
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      }
+    }
+    
+    stopScanner() {
+      this.scanning = false;
+      
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop());
+        this.stream = null;
+      }
+      
+      this.video.style.display = 'none';
+      this.overlay.style.display = 'none';
+      this.placeholder.style.display = 'flex';
+      this.hideScannerControls();
+    }
+    
+    showScannerControls() {
+      this.startBtn.style.display = 'none';
+      this.stopBtn.style.display = 'inline-flex';
+      this.switchBtn.style.display = 'inline-flex';
+    }
+    
+    hideScannerControls() {
+      this.startBtn.style.display = 'inline-flex';
+      this.stopBtn.style.display = 'none';
+      this.switchBtn.style.display = 'none';
+    }
+    
+    showLoading() {
+      this.placeholder.innerHTML = `
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="scanner-loading">
+          <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+        </svg>
+        <p>Initialisation du scanner...</p>
+      `;
+    }
+    
+    showTempMessage(message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'scanner-temp-message';
+      messageDiv.textContent = message;
+      this.container.appendChild(messageDiv);
+      
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 3000);
+    }
+    
+    showError(message) {
+      this.errorDiv.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <p>${message}</p>
+      `;
+      this.errorDiv.style.display = 'block';
+    }
+    
+    hideError() {
+      this.errorDiv.style.display = 'none';
+    }
+    
+    isUrl(string) {
+      try {
+        new URL(string);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    
+    handleError(error) {
+      console.error('Scanner error:', error);
+      
+      let message = 'Une erreur est survenue avec le scanner.';
+      
+      switch (error.name) {
+        case 'NotAllowedError':
+          message = 'Accès à la caméra refusé. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.';
+          break;
+        case 'NotFoundError':
+          message = 'Aucune caméra trouvée sur cet appareil.';
+          break;
+        case 'NotReadableError':
+          message = 'La caméra est déjà utilisée par une autre application.';
+          break;
+        case 'OverconstrainedError':
+          message = 'Configuration de caméra non supportée.';
+          break;
+        case 'NotSupportedError':
+          message = 'Votre navigateur ne supporte pas l\'accès à la caméra.';
+          break;
+      }
+      
+      this.showError(message);
+      this.placeholder.style.display = 'flex';
+      this.video.style.display = 'none';
+    }
+  }
+  
+  // Auto-initialize scanners
+  document.addEventListener('DOMContentLoaded', () => {
+    const scanners = document.querySelectorAll('.qr-scanner');
+    scanners.forEach(scanner => {
+      new QRScanner(scanner.id);
+    });
+  });
+</script>
+
+<style>
+  .qr-scanner {
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: var(--border-radius-lg, 0.75rem);
+    padding: var(--spacing-lg, 1.5rem);
+    background: var(--color-bg-base, #ffffff);
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+  }
+  
+  .qr-scanner--primary {
+    border-color: var(--color-primary, #1e88e5);
+  }
+  
+  .qr-scanner--secondary {
+    border-color: var(--color-secondary, #ff7043);
+  }
+  
+  .qr-scanner--accent {
+    border-color: var(--color-accent, #e3f2fd);
+  }
+  
+  .scanner-controls {
+    display: flex;
+    gap: var(--spacing-sm, 0.5rem);
+    margin-bottom: var(--spacing-lg, 1.5rem);
+    flex-wrap: wrap;
+  }
+  
+  .scanner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs, 0.25rem);
+    padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+    border: 1px solid var(--color-primary, #1e88e5);
+    background: var(--color-primary, #1e88e5);
+    color: var(--color-text-inverse, #ffffff);
+    border-radius: var(--border-radius-base, 0.375rem);
+    cursor: pointer;
+    transition: all var(--transition-duration, 0.3s) var(--transition-timing, cubic-bezier(0.4, 0, 0.2, 1));
+    text-decoration: none;
+    font-size: var(--font-size-sm, 0.875rem);
+    font-weight: var(--font-weight-medium, 500);
+  }
+  
+  .scanner-btn:hover {
+    background: var(--color-primary-hover, #1565c0);
+    border-color: var(--color-primary-hover, #1565c0);
+  }
+  
+  .scanner-btn--copy,
+  .scanner-btn--copy-small {
+    background: var(--color-success, #4caf50);
+    border-color: var(--color-success, #4caf50);
+  }
+  
+  .scanner-btn--copy:hover,
+  .scanner-btn--copy-small:hover {
+    background: var(--color-success-hover, #45a049);
+    border-color: var(--color-success-hover, #45a049);
+  }
+  
+  .scanner-btn--copy-small {
+    padding: var(--spacing-xs, 0.25rem);
+    font-size: var(--font-size-xs, 0.75rem);
+  }
+  
+  .scanner-btn--clear {
+    background: var(--color-error, #f44336);
+    border-color: var(--color-error, #f44336);
+  }
+  
+  .scanner-btn--clear:hover {
+    background: var(--color-error-hover, #d32f2f);
+    border-color: var(--color-error-hover, #d32f2f);
+  }
+  
+  .scanner-video-container {
+    position: relative;
+    border-radius: var(--border-radius-base, 0.375rem);
+    overflow: hidden;
+    background: var(--color-bg-muted, #f7f7f7);
+    min-height: 200px;
+  }
+  
+  .scanner-video {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+  }
+  
+  .scanner-canvas {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+  
+  .scanner-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 2px solid transparent;
+  }
+  
+  .scanner-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--color-primary, #1e88e5);
+  }
+  
+  .scanner-corner--tl {
+    top: -3px;
+    left: -3px;
+    border-bottom: none;
+    border-right: none;
+  }
+  
+  .scanner-corner--tr {
+    top: -3px;
+    right: -3px;
+    border-bottom: none;
+    border-left: none;
+  }
+  
+  .scanner-corner--bl {
+    bottom: -3px;
+    left: -3px;
+    border-top: none;
+    border-right: none;
+  }
+  
+  .scanner-corner--br {
+    bottom: -3px;
+    right: -3px;
+    border-top: none;
+    border-left: none;
+  }
+  
+  .scanner-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 2px;
+    background: var(--color-primary, #1e88e5);
+    animation: scannerLine 2s infinite;
+  }
+  
+  @keyframes scannerLine {
+    0%, 100% { transform: translate(-50%, -100px); }
+    50% { transform: translate(-50%, 100px); }
+  }
+  
+  .scanner-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--color-text-muted, #757575);
+    text-align: center;
+    padding: var(--spacing-xl, 2rem);
+  }
+  
+  .scanner-placeholder svg {
+    margin-bottom: var(--spacing-md, 1rem);
+    opacity: 0.5;
+  }
+  
+  .scanner-loading {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .scanner-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm, 0.5rem);
+    padding: var(--spacing-md, 1rem);
+    background: var(--color-error, #f44336);
+    color: var(--color-text-inverse, #ffffff);
+    border-radius: var(--border-radius-base, 0.375rem);
+    margin-top: var(--spacing-lg, 1.5rem);
+  }
+  
+  .scanner-results {
+    margin-top: var(--spacing-lg, 1.5rem);
+    padding-top: var(--spacing-lg, 1.5rem);
+    border-top: 1px solid var(--color-border, #ddd);
+  }
+  
+  .scanner-results h4 {
+    margin: 0 0 var(--spacing-md, 1rem) 0;
+    color: var(--color-text-base, #212121);
+  }
+  
+  .scanner-result-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md, 1rem);
+    padding: var(--spacing-md, 1rem);
+    background: var(--color-bg-muted, #f7f7f7);
+    border-radius: var(--border-radius-base, 0.375rem);
+  }
+  
+  .scanner-result-content {
+    flex: 1;
+  }
+  
+  .scanner-result-type {
+    display: inline-block;
+    padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+    background: var(--color-primary, #1e88e5);
+    color: var(--color-text-inverse, #ffffff);
+    border-radius: var(--border-radius-base, 0.375rem);
+    font-size: var(--font-size-xs, 0.75rem);
+    font-weight: var(--font-weight-medium, 500);
+    margin-bottom: var(--spacing-sm, 0.5rem);
+  }
+  
+  .scanner-result-text {
+    word-break: break-all;
+    font-family: var(--font-family-mono, monospace);
+    background: var(--color-bg-base, #ffffff);
+    padding: var(--spacing-sm, 0.5rem);
+    border-radius: var(--border-radius-base, 0.375rem);
+    border: 1px solid var(--color-border, #ddd);
+  }
+  
+  .scanner-result-text a {
+    color: var(--color-primary, #1e88e5);
+    text-decoration: underline;
+  }
+  
+  .scanner-history {
+    margin-top: var(--spacing-lg, 1.5rem);
+    padding-top: var(--spacing-lg, 1.5rem);
+    border-top: 1px solid var(--color-border, #ddd);
+  }
+  
+  .scanner-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md, 1rem);
+  }
+  
+  .scanner-history-header h4 {
+    margin: 0;
+    color: var(--color-text-base, #212121);
+  }
+  
+  .scanner-history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm, 0.5rem);
+    padding: var(--spacing-sm, 0.5rem);
+    border-bottom: 1px solid var(--color-border, #ddd);
+  }
+  
+  .scanner-history-item:last-child {
+    border-bottom: none;
+  }
+  
+  .scanner-history-content {
+    flex: 1;
+  }
+  
+  .scanner-history-type {
+    display: inline-block;
+    padding: 2px var(--spacing-xs, 0.25rem);
+    background: var(--color-accent, #e3f2fd);
+    color: var(--color-text-base, #212121);
+    border-radius: var(--border-radius-base, 0.375rem);
+    font-size: var(--font-size-xs, 0.75rem);
+    margin-bottom: var(--spacing-xs, 0.25rem);
+  }
+  
+  .scanner-history-text {
+    font-size: var(--font-size-sm, 0.875rem);
+    margin-bottom: var(--spacing-xs, 0.25rem);
+    word-break: break-all;
+  }
+  
+  .scanner-history-text a {
+    color: var(--color-primary, #1e88e5);
+    text-decoration: underline;
+  }
+  
+  .scanner-history-time {
+    color: var(--color-text-muted, #757575);
+    font-size: var(--font-size-xs, 0.75rem);
+  }
+  
+  .scanner-temp-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--color-success, #4caf50);
+    color: var(--color-text-inverse, #ffffff);
+    padding: var(--spacing-md, 1rem);
+    border-radius: var(--border-radius-base, 0.375rem);
+    z-index: var(--z-index-tooltip, 1070);
+    animation: fadeInOut 3s ease-in-out;
+  }
+  
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0; transform: translateX(100%); }
+    10%, 90% { opacity: 1; transform: translateX(0); }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .scanner-controls {
+      justify-content: center;
+    }
+    
+    .scanner-btn {
+      font-size: var(--font-size-xs, 0.75rem);
+      padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+    }
+    
+    .scanner-video {
+      max-height: 300px;
+    }
+    
+    .scanner-frame {
+      width: 150px;
+      height: 150px;
+    }
+    
+    .scanner-line {
+      width: 130px;
+    }
+    
+    .scanner-placeholder {
+      min-height: 150px;
+      padding: var(--spacing-md, 1rem);
+    }
+    
+    .scanner-result-item,
+    .scanner-history-item {
+      flex-direction: column;
+      gap: var(--spacing-sm, 0.5rem);
+    }
+  }
+</style>

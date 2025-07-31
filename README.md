@@ -27,6 +27,63 @@
 
 ---
 
+## 📸 Nouvelles Fonctionnalités Camera & Scanner
+
+Ce projet inclut maintenant des fonctionnalités complètes de capture photo et de scan QR/code-barres.
+
+### 🚀 Accès rapide
+- **Page démo** : [/camera-scanner](/camera-scanner)
+- **Navigation** : Accessible via le menu principal "📸 Camera & Scanner"
+
+### 📱 Fonctionnalités Camera
+- ✅ Accès caméra front/back
+- ✅ Changement de caméra en un clic
+- ✅ Aperçu en temps réel
+- ✅ Capture haute qualité
+- ✅ Téléchargement automatique
+- ✅ Compatible mobile/desktop/tablette
+- ✅ Gestion des permissions
+- ✅ Messages d'erreur explicites
+
+### 🔍 Fonctionnalités Scanner QR/Codes
+- ✅ Scan QR codes en temps réel
+- ✅ Support codes-barres multiples
+- ✅ Détection automatique
+- ✅ Copie vers presse-papier
+- ✅ Historique des scans
+- ✅ Sauvegarde locale
+- ✅ Liens cliquables
+- ✅ Interface intuitive
+
+### 🌐 Compatibilité
+- **Desktop** : Chrome 53+, Firefox 36+, Safari 11+, Edge 79+
+- **Mobile** : iOS Safari 11+, Chrome Mobile 53+, Firefox Mobile 68+, Samsung Internet 6.2+
+- **Tablette** : iPad Safari 11+, Android Chrome 53+, Surface Edge 79+
+
+### 🛠️ Utilisation
+```astro
+---
+import CameraCapture from "@organisms/CameraCapture.astro";
+import QRScanner from "@organisms/QRScanner.astro";
+---
+
+<!-- Camera Photo -->
+<CameraCapture 
+  preset="primary"
+  showPreview={true}
+  allowDownload={true}
+/>
+
+<!-- Scanner QR -->
+<QRScanner 
+  preset="primary"
+  showHistory={true}
+  copyToClipboard={true}
+/>
+```
+
+---
+
 ## 3. Composants UI (liste exhaustive)
 
 ### Atoms
@@ -278,6 +335,45 @@
 ```
 
 ### Organisms
+
+#### CameraCapture.astro
+- **Props** :
+  - `id`: string (default: 'camera-capture')
+  - `className`: string (default: '')
+  - `preset`: 'default' | 'primary' | 'secondary' | 'accent' (default: 'default')
+  - `showPreview`: boolean (default: true)
+  - `allowDownload`: boolean (default: true)
+  - `maxWidth`: string (default: '100%')
+  - `maxHeight`: string (default: '400px')
+- **Exemple** :
+```astro
+<CameraCapture 
+  preset="primary"
+  showPreview={true}
+  allowDownload={true}
+  maxHeight="500px"
+/>
+```
+
+#### QRScanner.astro
+- **Props** :
+  - `id`: string (default: 'qr-scanner')
+  - `className`: string (default: '')
+  - `preset`: 'default' | 'primary' | 'secondary' | 'accent' (default: 'default')
+  - `showHistory`: boolean (default: true)
+  - `copyToClipboard`: boolean (default: true)
+  - `maxWidth`: string (default: '100%')
+  - `maxHeight`: string (default: '400px')
+  - `scanFormats`: string[] (default: ['qr_code', 'code_128', 'code_39', 'ean_13', 'ean_8'])
+- **Exemple** :
+```astro
+<QRScanner 
+  preset="primary"
+  showHistory={true}
+  copyToClipboard={true}
+  maxHeight="500px"
+/>
+```
 
 #### Timeline.astro
 - **Props** :
@@ -706,6 +802,28 @@ Ce tableau liste chaque token CSS (variable design) et les composants qui l’ut
 ## Exemple de changelog
 
 ```
+## [1.3.0] - 2025-07-31
+### Ajouté
+- 📸 Nouveau composant `CameraCapture.astro` pour la capture photo
+- 🔍 Nouveau composant `QRScanner.astro` pour le scan QR/code-barres
+- 📄 Page de démonstration `/camera-scanner` complète
+- 🧭 Navigation vers les nouvelles fonctionnalités
+- 📚 Documentation exhaustive des nouveaux composants
+- ✅ Gestion d'erreurs et états de chargement
+- 🎨 Styles responsives et presets cohérents
+- 💾 Historique local des scans QR
+- 📋 Fonctionnalité copie vers presse-papier
+- 🔄 Support caméra front/back
+- 📱 Compatibilité mobile, tablette, desktop
+
+### Fonctionnalités clés
+- Capture photo haute qualité
+- Scan QR codes et codes-barres en temps réel
+- Interface utilisateur intuitive
+- Messages d'erreur explicites
+- Sauvegarde automatique
+- Téléchargement direct des photos
+
 ## [1.2.0] - 2025-07-09
 ### Ajouté
 - Composant `UserCard.astro` avec props exhaustives

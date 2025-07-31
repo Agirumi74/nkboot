@@ -1,0 +1,453 @@
+---
+export interface Props {
+  id?: string;
+  className?: string;
+  preset?: 'default' | 'primary' | 'secondary' | 'accent';
+  showPreview?: boolean;
+  allowDownload?: boolean;
+  maxWidth?: string;
+  maxHeight?: string;
+}
+
+const {
+  id = 'camera-capture',
+  className = '',
+  preset = 'default',
+  showPreview = true,
+  allowDownload = true,
+  maxWidth = '100%',
+  maxHeight = '400px',
+  ...rest
+} = Astro.props;
+---
+
+<div 
+  class={`camera-capture camera-capture--${preset} ${className}`}
+  id={id}
+  style={`max-width: ${maxWidth}; max-height: ${maxHeight};`}
+  {...rest}
+>
+  <!-- Camera Controls -->
+  <div class="camera-controls">
+    <button type="button" class="camera-btn camera-btn--start" id={`${id}-start`}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 15c1.66 0 2.99-1.34 2.99-3S13.66 9 12 9s-3 1.34-3 3 1.34 3 3 3z"/>
+        <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+      </svg>
+      Démarrer la caméra
+    </button>
+    
+    <button type="button" class="camera-btn camera-btn--capture" id={`${id}-capture`} style="display: none;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1L9 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 1H9z"/>
+      </svg>
+      Capturer
+    </button>
+    
+    <button type="button" class="camera-btn camera-btn--switch" id={`${id}-switch`} style="display: none;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9.12 8l.88.88L12 7l2 1.88.88-.88L12 5.12 9.12 8zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+      </svg>
+      Changer caméra
+    </button>
+    
+    <button type="button" class="camera-btn camera-btn--stop" id={`${id}-stop`} style="display: none;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 6h12v12H6z"/>
+      </svg>
+      Arrêter
+    </button>
+  </div>
+
+  <!-- Camera Video Stream -->
+  <div class="camera-video-container">
+    <video 
+      id={`${id}-video`}
+      class="camera-video"
+      autoplay
+      muted
+      playsinline
+      style="display: none;"
+    ></video>
+    
+    <canvas 
+      id={`${id}-canvas`}
+      class="camera-canvas"
+      style="display: none;"
+    ></canvas>
+    
+    <div class="camera-placeholder" id={`${id}-placeholder`}>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 15c1.66 0 2.99-1.34 2.99-3S13.66 9 12 9s-3 1.34-3 3 1.34 3 3 3z"/>
+        <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+      </svg>
+      <p>Cliquez sur "Démarrer la caméra" pour commencer</p>
+    </div>
+  </div>
+
+  <!-- Error Messages -->
+  <div class="camera-error" id={`${id}-error`} style="display: none;"></div>
+
+  <!-- Preview Section -->
+  {showPreview && (
+    <div class="camera-preview" id={`${id}-preview`} style="display: none;">
+      <h4>Photo capturée</h4>
+      <img id={`${id}-preview-img`} class="camera-preview-img" alt="Photo capturée" />
+      {allowDownload && (
+        <div class="camera-preview-actions">
+          <a 
+            id={`${id}-download`}
+            class="camera-btn camera-btn--download"
+            download="photo.png"
+            style="display: none;"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            Télécharger
+          </a>
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
+<script>
+  class CameraCapture {
+    constructor(containerId) {
+      this.containerId = containerId;
+      this.container = document.getElementById(containerId);
+      this.video = document.getElementById(`${containerId}-video`);
+      this.canvas = document.getElementById(`${containerId}-canvas`);
+      this.placeholder = document.getElementById(`${containerId}-placeholder`);
+      this.errorDiv = document.getElementById(`${containerId}-error`);
+      this.preview = document.getElementById(`${containerId}-preview`);
+      this.previewImg = document.getElementById(`${containerId}-preview-img`);
+      this.downloadLink = document.getElementById(`${containerId}-download`);
+      
+      this.startBtn = document.getElementById(`${containerId}-start`);
+      this.captureBtn = document.getElementById(`${containerId}-capture`);
+      this.switchBtn = document.getElementById(`${containerId}-switch`);
+      this.stopBtn = document.getElementById(`${containerId}-stop`);
+      
+      this.stream = null;
+      this.currentFacingMode = 'user'; // 'user' (front) or 'environment' (back)
+      
+      this.init();
+    }
+    
+    init() {
+      this.startBtn?.addEventListener('click', () => this.startCamera());
+      this.captureBtn?.addEventListener('click', () => this.capturePhoto());
+      this.switchBtn?.addEventListener('click', () => this.switchCamera());
+      this.stopBtn?.addEventListener('click', () => this.stopCamera());
+    }
+    
+    async startCamera() {
+      try {
+        this.hideError();
+        this.showLoading();
+        
+        const constraints = {
+          video: {
+            facingMode: this.currentFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        };
+        
+        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+        this.video.srcObject = this.stream;
+        
+        this.video.onloadedmetadata = () => {
+          this.placeholder.style.display = 'none';
+          this.video.style.display = 'block';
+          this.showCameraControls();
+        };
+        
+      } catch (error) {
+        this.handleError(error);
+      }
+    }
+    
+    async switchCamera() {
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop());
+      }
+      
+      this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
+      await this.startCamera();
+    }
+    
+    capturePhoto() {
+      if (!this.video || !this.canvas) return;
+      
+      const context = this.canvas.getContext('2d');
+      this.canvas.width = this.video.videoWidth;
+      this.canvas.height = this.video.videoHeight;
+      
+      context.drawImage(this.video, 0, 0);
+      
+      const dataURL = this.canvas.toDataURL('image/png');
+      this.showPreview(dataURL);
+    }
+    
+    showPreview(dataURL) {
+      if (this.previewImg) {
+        this.previewImg.src = dataURL;
+        this.preview.style.display = 'block';
+        
+        if (this.downloadLink) {
+          this.downloadLink.href = dataURL;
+          this.downloadLink.style.display = 'inline-flex';
+        }
+      }
+    }
+    
+    stopCamera() {
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop());
+        this.stream = null;
+      }
+      
+      this.video.style.display = 'none';
+      this.placeholder.style.display = 'flex';
+      this.hideCameraControls();
+    }
+    
+    showCameraControls() {
+      this.startBtn.style.display = 'none';
+      this.captureBtn.style.display = 'inline-flex';
+      this.switchBtn.style.display = 'inline-flex';
+      this.stopBtn.style.display = 'inline-flex';
+    }
+    
+    hideCameraControls() {
+      this.startBtn.style.display = 'inline-flex';
+      this.captureBtn.style.display = 'none';
+      this.switchBtn.style.display = 'none';
+      this.stopBtn.style.display = 'none';
+    }
+    
+    showLoading() {
+      this.placeholder.innerHTML = `
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="camera-loading">
+          <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+        </svg>
+        <p>Initialisation de la caméra...</p>
+      `;
+    }
+    
+    showError(message) {
+      this.errorDiv.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <p>${message}</p>
+      `;
+      this.errorDiv.style.display = 'block';
+    }
+    
+    hideError() {
+      this.errorDiv.style.display = 'none';
+    }
+    
+    handleError(error) {
+      console.error('Camera error:', error);
+      
+      let message = 'Une erreur est survenue avec la caméra.';
+      
+      switch (error.name) {
+        case 'NotAllowedError':
+          message = 'Accès à la caméra refusé. Veuillez autoriser l\'accès dans les paramètres de votre navigateur.';
+          break;
+        case 'NotFoundError':
+          message = 'Aucune caméra trouvée sur cet appareil.';
+          break;
+        case 'NotReadableError':
+          message = 'La caméra est déjà utilisée par une autre application.';
+          break;
+        case 'OverconstrainedError':
+          message = 'Configuration de caméra non supportée.';
+          break;
+        case 'NotSupportedError':
+          message = 'Votre navigateur ne supporte pas l\'accès à la caméra.';
+          break;
+      }
+      
+      this.showError(message);
+      this.placeholder.style.display = 'flex';
+      this.video.style.display = 'none';
+    }
+  }
+  
+  // Auto-initialize cameras
+  document.addEventListener('DOMContentLoaded', () => {
+    const cameras = document.querySelectorAll('.camera-capture');
+    cameras.forEach(camera => {
+      new CameraCapture(camera.id);
+    });
+  });
+</script>
+
+<style>
+  .camera-capture {
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: var(--border-radius-lg, 0.75rem);
+    padding: var(--spacing-lg, 1.5rem);
+    background: var(--color-bg-base, #ffffff);
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+  }
+  
+  .camera-capture--primary {
+    border-color: var(--color-primary, #1e88e5);
+  }
+  
+  .camera-capture--secondary {
+    border-color: var(--color-secondary, #ff7043);
+  }
+  
+  .camera-capture--accent {
+    border-color: var(--color-accent, #e3f2fd);
+  }
+  
+  .camera-controls {
+    display: flex;
+    gap: var(--spacing-sm, 0.5rem);
+    margin-bottom: var(--spacing-lg, 1.5rem);
+    flex-wrap: wrap;
+  }
+  
+  .camera-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs, 0.25rem);
+    padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+    border: 1px solid var(--color-primary, #1e88e5);
+    background: var(--color-primary, #1e88e5);
+    color: var(--color-text-inverse, #ffffff);
+    border-radius: var(--border-radius-base, 0.375rem);
+    cursor: pointer;
+    transition: all var(--transition-duration, 0.3s) var(--transition-timing, cubic-bezier(0.4, 0, 0.2, 1));
+    text-decoration: none;
+    font-size: var(--font-size-sm, 0.875rem);
+    font-weight: var(--font-weight-medium, 500);
+  }
+  
+  .camera-btn:hover {
+    background: var(--color-primary-hover, #1565c0);
+    border-color: var(--color-primary-hover, #1565c0);
+  }
+  
+  .camera-btn--download {
+    background: var(--color-success, #4caf50);
+    border-color: var(--color-success, #4caf50);
+  }
+  
+  .camera-btn--download:hover {
+    background: var(--color-success-hover, #45a049);
+    border-color: var(--color-success-hover, #45a049);
+  }
+  
+  .camera-video-container {
+    position: relative;
+    border-radius: var(--border-radius-base, 0.375rem);
+    overflow: hidden;
+    background: var(--color-bg-muted, #f7f7f7);
+    min-height: 200px;
+  }
+  
+  .camera-video {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+  }
+  
+  .camera-canvas {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .camera-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--color-text-muted, #757575);
+    text-align: center;
+    padding: var(--spacing-xl, 2rem);
+  }
+  
+  .camera-placeholder svg {
+    margin-bottom: var(--spacing-md, 1rem);
+    opacity: 0.5;
+  }
+  
+  .camera-loading {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .camera-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm, 0.5rem);
+    padding: var(--spacing-md, 1rem);
+    background: var(--color-error, #f44336);
+    color: var(--color-text-inverse, #ffffff);
+    border-radius: var(--border-radius-base, 0.375rem);
+    margin-top: var(--spacing-lg, 1.5rem);
+  }
+  
+  .camera-preview {
+    margin-top: var(--spacing-lg, 1.5rem);
+    padding-top: var(--spacing-lg, 1.5rem);
+    border-top: 1px solid var(--color-border, #ddd);
+  }
+  
+  .camera-preview h4 {
+    margin: 0 0 var(--spacing-md, 1rem) 0;
+    color: var(--color-text-base, #212121);
+  }
+  
+  .camera-preview-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius-base, 0.375rem);
+    border: 1px solid var(--color-border, #ddd);
+  }
+  
+  .camera-preview-actions {
+    margin-top: var(--spacing-md, 1rem);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .camera-controls {
+      justify-content: center;
+    }
+    
+    .camera-btn {
+      font-size: var(--font-size-xs, 0.75rem);
+      padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+    }
+    
+    .camera-video {
+      max-height: 300px;
+    }
+    
+    .camera-placeholder {
+      min-height: 150px;
+      padding: var(--spacing-md, 1rem);
+    }
+  }
+</style>
